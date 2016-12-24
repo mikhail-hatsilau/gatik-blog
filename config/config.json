@@ -2,10 +2,7 @@
   "database": {
     "url": "mongodb://gatik:19930406@ds037015.mlab.com:37015/heroku_xs3tm4pr"
   },
-  "jwt": {
-    "secret": "MuMu",
-    "sessionInfo": {
-      "session": false
-    }
+  "session": {
+    "secret": "MuMu"
   }
 }

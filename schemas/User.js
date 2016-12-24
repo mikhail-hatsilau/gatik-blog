@@ -1,8 +1,7 @@
 const mongoose = require('../database');
-const crypto = require('crypto');
+const { createHash } = require('crypto');
 
 const UserSchema = new mongoose.Schema({
-    _id: mongoose.Schema.Types.ObjectId,
     username: {
         type: String,
         required: true
@@ -21,9 +20,9 @@ UserSchema.pre('save', function(next) {
     if (!user.isModified('password')) {
         return next();
     }
-    const md5Crypto = crypto.createHash('md5');
+    const md5Crypto = createHash('md5');
     md5Crypto.update(user.password);
-    user.password = md5Crypto.digest('hash');
+    user.password = md5Crypto.digest('hex');
     next();
 });
 
