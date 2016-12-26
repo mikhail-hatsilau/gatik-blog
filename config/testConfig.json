@@ -1,0 +1,9 @@
+{
+  "database": {
+    "url": "mongodb://localhost:27017/heroku_xs3tm4pr"
+  },
+  "session": {
+    "secret": "MuMu"
+  },
+  "port": 3001
+}

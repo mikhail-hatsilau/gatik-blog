@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 const nconf = require('../config');
+const Promise = require('bluebird');
 
-console.log(nconf.get('database').url);
+mongoose.Promise = Promise;
+
 mongoose.connect(nconf.get('database').url);
 
 module.exports = mongoose;

@@ -4,5 +4,6 @@
   },
   "session": {
     "secret": "MuMu"
-  }
+  },
+  "port": 3000
 }

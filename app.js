@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
 const uuid = require('node-uuid');
 const path = require('path');
 const favicon = require('serve-favicon');
@@ -11,10 +12,10 @@ const graffiti = require('@risingstack/graffiti');
 const { getSchema } = require('@risingstack/graffiti-mongoose');
 const { User, Article } = require('./schemas');
 const passport = require('./passport');
+const mongoose = require('./database');
 
 const app = express();
 
-// uncomment after placing your favicon in /public
 // app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
@@ -23,26 +24,45 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
-    genid(req) {
+    genid() {
         return uuid.v4();
     },
     secret: nconf.get('session').secret,
+    saveUninitialized: true,
     resave: true,
-    saveUninitialized: true
+    store: new MongoStore({ mongooseConnection: mongoose.connection })
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.post('/login', passport.authenticate('local'), (req, res) => {
-    res.json({
-        sessionId: req.sessionID
-    });
+app.post('/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+        if (err) {
+           return next(err);
+        }
+
+        if (!user) {
+           res.status(403);
+           res.json(info);
+           return;
+        }
+
+        req.logIn(user, (err) => {
+           if (err) {
+               next(err);
+           }
+
+           res.json({
+               sessionId: req.sessionID
+           });
+        });
+    })(req, res, next);
 });
 
 app.use((req, res, next) => {
     if (!req.isAuthenticated()) {
-        res.status = 401;
+        res.status(401);
         res.json({
             message: 'Not authorized'
         });
@@ -52,8 +72,9 @@ app.use((req, res, next) => {
 });
 
 
-app.post('/logout', (req, res, next) => {
+app.post('/logout', (req, res) => {
     req.logout();
+    req.session.destroy();
     res.json({
         message: 'Logged out'
     });
@@ -72,16 +93,16 @@ app.use((req, res, next) => {
 });
 
 // error handler
-app.use((err, req, res, next) => {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    // render the error page
+app.use((err, req, res) => {
     res.status(err.status || 500);
     res.json({
         message: err.message
     });
 });
+
+const port = nconf.get('port');
+
+app.listen(port);
+console.log("Listening on port " + port);
 
 module.exports = app;

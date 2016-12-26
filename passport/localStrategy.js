@@ -1,14 +1,9 @@
 const { Strategy } = require('passport-local');
 const { createHash } = require('crypto');
-const nconf = require('../config');
 const { User } = require('../schemas');
 
 const strategy = new Strategy((username, password, done) => {
-    console.log(username);
-
-    const md5Crypto = createHash('md5');
-    md5Crypto.update(password);
-    const encryptedPass = md5Crypto.digest('hex');
+    const encryptedPass = createHash('md5').update(password).digest('hex');
 
     User.findOne({ username }, (err, user) => {
         if (err) {
@@ -22,10 +17,10 @@ const strategy = new Strategy((username, password, done) => {
                     username: user.username
                 });
             }
-            return done(new Error('Password is incorrect'), null);
+            return done(null, false, { message: 'Password is incorrect' });
         }
 
-        done(new Error('Login is incorrect'), null);
+        return done(null, false, { message: 'Username is incorrect' });
     });
 });
 

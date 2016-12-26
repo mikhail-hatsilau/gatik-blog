@@ -20,9 +20,7 @@ UserSchema.pre('save', function(next) {
     if (!user.isModified('password')) {
         return next();
     }
-    const md5Crypto = createHash('md5');
-    md5Crypto.update(user.password);
-    user.password = md5Crypto.digest('hex');
+    user.password =  createHash('md5').update(user.password).digest('hex');
     next();
 });
 
